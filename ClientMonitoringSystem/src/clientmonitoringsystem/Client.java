@@ -12,7 +12,7 @@ import java.net.Socket;
  * @author tinh.pv
  */
 public class Client {
-    public final static String SERVER_IP = "127.0.0.1";
+    public final static String SERVER_IP = "192.168.196.1";
     public final static int SERVER_PORT = 7000;
     public static void main(String[] args) throws IOException, InterruptedException {
         Socket socket = null;
