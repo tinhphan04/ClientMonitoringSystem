@@ -4,16 +4,14 @@
  */
 package clientmonitoringsystem;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JLabel;
-import javax.swing.SwingUtilities;
+import javax.swing.JFileChooser;
+import javax.swing.tree.*;
 
 /**
  *
@@ -43,7 +41,10 @@ public class MainForm extends javax.swing.JFrame {
         jPanel2 = new javax.swing.JPanel();
         btnStart = new javax.swing.JButton();
         lblInfor = new javax.swing.JLabel();
+        jButton1 = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTree1 = new javax.swing.JTree();
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -80,20 +81,36 @@ public class MainForm extends javax.swing.JFrame {
         jPanel2.add(btnStart);
 
         lblInfor.setText("IP & Port");
-        lblInfor.setPreferredSize(new java.awt.Dimension(80, 20));
+        lblInfor.setMaximumSize(new java.awt.Dimension(100, 16));
+        lblInfor.setPreferredSize(new java.awt.Dimension(300, 20));
         jPanel2.add(lblInfor);
 
+        jButton1.setText("ShowTree");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+        jPanel2.add(jButton1);
+
         getContentPane().add(jPanel2, java.awt.BorderLayout.PAGE_START);
+
+        jScrollPane1.setViewportView(jTree1);
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 432, Short.MAX_VALUE)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 81, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 319, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 250, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 256, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(19, 19, 19))
         );
 
         getContentPane().add(jPanel3, java.awt.BorderLayout.CENTER);
@@ -108,12 +125,9 @@ public class MainForm extends javax.swing.JFrame {
     
     
     private void btnStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnStartActionPerformed
-        System.out.println("Binding to port " + SERVER_PORT + ", please wait  ...");
         try {
             serverSocket = new ServerSocket(SERVER_PORT);
-            System.out.println("Server started: " + serverSocket);
-            System.out.println("Waiting for a client ...");
-            lblInfor.setText("Server is started.....");
+            lblInfor.setText("Waiting for client connections on: " + serverSocket.getInetAddress().getLocalHost().getHostAddress() + ":" + SERVER_PORT);
             RunThread rt = new RunThread();
             rt.start();
         } catch (IOException ex) {
@@ -121,6 +135,29 @@ public class MainForm extends javax.swing.JFrame {
         }
         
     }//GEN-LAST:event_btnStartActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+//        File fileRoot = new File("C:\\");
+//
+//        DefaultMutableTreeNode root = new DefaultMutableTreeNode(fileRoot);
+//        DefaultTreeModel model = new DefaultTreeModel(root);
+//
+//        File[] subItems = fileRoot.listFiles();
+//        for (File file : subItems) {
+//            root.add(new DefaultMutableTreeNode(file));
+//        }
+//
+//        jTree1.setModel(model);
+
+        JFileChooser fc = new JFileChooser();
+        fc.setCurrentDirectory(new java.io.File("\\192.168.196.128")); // start at application current directory
+        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int returnVal = fc.showSaveDialog(this);
+        if(returnVal == JFileChooser.APPROVE_OPTION) {
+            File yourFolder = fc.getSelectedFile();
+        }
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -214,10 +251,13 @@ public class MainForm extends javax.swing.JFrame {
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnStart;
+    private javax.swing.JButton jButton1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel6;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTree jTree1;
     private javax.swing.JLabel lblInfor;
     // End of variables declaration//GEN-END:variables
 
