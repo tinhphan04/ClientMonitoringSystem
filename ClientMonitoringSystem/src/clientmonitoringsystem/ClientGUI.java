@@ -4,15 +4,34 @@
  */
 package clientmonitoringsystem;
 
+import static com.sun.nio.file.ExtendedWatchEventModifier.FILE_TREE;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -20,6 +39,8 @@ import javax.swing.JOptionPane;
  */
 public class ClientGUI extends javax.swing.JFrame {
 
+    Socket socket = null;
+    
     /**
      * Creates new form ClientGUI
      */
@@ -102,13 +123,92 @@ public class ClientGUI extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
     
-    private void SendMessageToServer(Socket s, String messString) throws IOException
-    {
-        BufferedWriter writer = new BufferedWriter(new 
-        OutputStreamWriter(s.getOutputStream()));
+    class MonitorFolder extends Thread{
+        private Socket socket;
+        private String PathString;
+        private ObjectOutputStream oos;
+        public MonitorFolder(Socket socket,String Path, ObjectOutputStream oos)
+        {
+            this.socket = socket;
+            this.PathString = Path;
+            this.oos = oos;
+        }
+        @Override
+        public void run()
+        {
+            
+            FileSystem fs = FileSystems.getDefault();
+            WatchService ws;
+            try {
+                ws = fs.newWatchService();
+                Path pTemp = Paths.get(PathString);
+                System.out.println(PathString);
+                pTemp.register(ws, new WatchEvent.Kind[] {ENTRY_MODIFY, ENTRY_CREATE, ENTRY_DELETE}, FILE_TREE);
+                while(true)
+                {
+                    Message me = new Message();
+                    WatchKey k = ws.take();
+                    for (WatchEvent<?> e : k.pollEvents())
+                    {
+                        Object c = e.context();
+                        System.out.printf("%s %d %s\n", e.kind(), e.count(), c);
+                        
+                        me.setTime(new Date().toString());
+                        me.setAction(e.kind().name());
+                        me.setDescription(c.toString());
+                        oos.writeObject(me);
+                        oos.flush();
+                    }
+                    k.reset();
+                    
+                }
+                
+            } catch (IOException ex) {
+                Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            
+        }
+    }
+    
+    class ConnectToServer extends Thread{
+        private String _IP;
+        private int _Port;
+        public ConnectToServer(String IP, int Port)
+        {
+            this._IP = IP;
+            this._Port = Port;
+        }
+        @Override
+        public void run()
+        {
+            boolean success = false;
+            try {
+                while (!success) {
+                    socket = new Socket(_IP, _Port); // Connect to server
+                    DataInputStream dis = new DataInputStream(socket.getInputStream());
+                    ObjectOutputStream oos = new ObjectOutputStream (socket.getOutputStream());
 
-        writer.write(messString);
-        writer.flush();
+                    String response = dis.readUTF();
+                    System.out.println(response);
+                    MonitorFolder mt = new MonitorFolder(socket ,response, oos);
+                    mt.start();
+
+                    success = true;
+                }
+                
+            } catch (IOException ie) {
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(ClientGUI.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                System.out.println("Can't connect to server");
+            }
+            
+        }
     }
     
     private void btnConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConnectActionPerformed
@@ -116,25 +216,16 @@ public class ClientGUI extends javax.swing.JFrame {
         String ip_addr = txtIP.getText().toString();
         if(!ip_addr.isEmpty())
         {
-            Socket socket = null;
-            try {
-                socket = new Socket(ip_addr, 7000); // Connect to server
-                String messString = "Connected";
-                SendMessageToServer(socket, messString);
-                Thread.sleep(200);
-            } catch (IOException ie) {
-                System.out.println("Can't connect to server");
-            } catch (InterruptedException ex) {
-                Logger.getLogger(ClientGUI.class.getName()).log(Level.SEVERE, null, ex);
-            } finally {
-                if (socket != null) {
-                    try {
-                        socket.close();
-                    } catch (IOException ex) {
-                        Logger.getLogger(ClientGUI.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            }
+            ConnectToServer st = new ConnectToServer(ip_addr, 7000);
+            st.start();
+            //Thread.sleep(1000);
+//            if (socket != null) {
+//                try {
+//                    socket.close();
+//                } catch (IOException ex) {
+//                    Logger.getLogger(ClientGUI.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//            }
         }
         else{
             JOptionPane.showMessageDialog(this, "Vui long nhap IP",

@@ -4,24 +4,21 @@
  */
 package clientmonitoringsystem;
 
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.*;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.JTable;
 import javax.swing.RowFilter;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
-import javax.swing.tree.*;
 
 /**
  *
@@ -178,14 +175,15 @@ public class MainForm extends javax.swing.JFrame {
     public final static int SERVER_PORT = 7000;
     ExecutorService executor = Executors.newFixedThreadPool(NUM_OF_THREAD);
     ServerSocket serverSocket = null;
-    
+    Socket socket = null;
     
     
     private void btnStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnStartActionPerformed
+ 
         try {
             serverSocket = new ServerSocket(SERVER_PORT);
             lblInfor.setText("Waiting for client connections on: " + serverSocket.getInetAddress().getLocalHost().getHostAddress() + ":" + SERVER_PORT);
-            RunThread rt = new RunThread();
+            AcceptConnect rt = new AcceptConnect(serverSocket);
             rt.start();
             TableFilter tb = new TableFilter();
             tb.start();
@@ -228,31 +226,28 @@ public class MainForm extends javax.swing.JFrame {
             }
         });
     }
-
-    class RunThread extends Thread {
-        //private JTable _table;
-        public RunThread() //JTable table
+    
+    class AcceptConnect extends Thread{
+        private ServerSocket _serverSocket;
+        public AcceptConnect(ServerSocket serverSocket)
         {
-            //this._table = table;
+            this._serverSocket = serverSocket;
         }
-
+        @Override
         public void run()
         {
-            try
+            while (!_serverSocket.isClosed())
             {
-                while (true) {
-                    
-                    Socket socket = serverSocket.accept();
-                    System.out.println("Client accepted: " + socket);
-                    WorkWithClient th  = new WorkWithClient(socket);
+                try
+                {
+                    //Call the callback whenever accepting a new connection
+                    Socket ss = _serverSocket.accept();
+                    WorkWithClient th  = new WorkWithClient(ss);
                     th.start();
-                    
-                    Thread.sleep(100);
                 }
-            }
-            catch (Exception ex)
-            {
-
+                catch (Exception e)
+                {
+                }
             }
         }
     }
@@ -264,33 +259,32 @@ public class MainForm extends javax.swing.JFrame {
         public WorkWithClient(Socket socket) {
             this.socket = socket;
         }
- 
+        @Override
         public void run() {
-            System.out.println("Processing: " + socket);
             try {
-                InputStreamReader inputstreamreader = new    
-                InputStreamReader(socket.getInputStream());
+                //DataInputStream dis = new DataInputStream(socket.getInputStream());
+                ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+                //String response = ois.readUTF();
+                
+                //System.out.println(response);
+                DefaultTableModel model = (DefaultTableModel) tableLstClient.getModel();
+                TableListClient Clientth = new TableListClient(model);
+                int rowCount = model.getRowCount();
+                model.addRow(new Object[]{rowCount + 1, (socket.getInetAddress().getLocalHost().getHostAddress().toString() + ":"+ String.valueOf(socket.getPort())) });
+                Clientth.start();
+                //Gửi đường dẫn thư mục giám sát cho client
+                dos.writeUTF("C:\\ClientMonitoringSystem\\Data");
+                dos.flush();
+                
+                Message m = (Message) ois.readObject();
+                System.out.println("server: " + m.getTime() + " " + m.getAction() + " " +m.getDescription());
 
-                BufferedReader bufferedreader = new  
-                BufferedReader(inputstreamreader);
-
-                PrintWriter printwriter = new  
-                PrintWriter(socket.getOutputStream(),true);
-
-                String line = "";
-                boolean done = false;
-                while (((line = bufferedreader.readLine()) != null) &&(!done)){
-                    DefaultTableModel model = (DefaultTableModel) tableLstClient.getModel();
-                    TableListClient Clientth = new TableListClient(model);
-                    int rowCount = model.getRowCount();
-                    model.addRow(new Object[]{rowCount + 1, (socket.getInetAddress().getLocalHost().getHostAddress().toString() + ":"+ String.valueOf(socket.getPort())) });
-                    Clientth.start();
-                    if (line.compareToIgnoreCase("Exit") == 0) done = true;
-                }
             } catch (IOException e) {
-                System.err.println("Request Processing Error: " + e);
-            }
-            System.out.println("Complete processing: " + socket);   
+                
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
+            }  
         }
     }
     
@@ -364,6 +358,7 @@ public class MainForm extends javax.swing.JFrame {
             }
         }
     }
+    
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnStart;
