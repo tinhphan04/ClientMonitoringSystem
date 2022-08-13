@@ -11,7 +11,7 @@ import javax.swing.JFrame;
  *
  * @author tinh.pv
  */
-public class ClientMonitoringSystem {
+public class Server { //ClientMonitoringSystem
 
     /**
      * @param args the command line arguments
@@ -31,7 +31,7 @@ public class ClientMonitoringSystem {
         //Create and set up the content pane.
         MainForm demo = new MainForm();
         //frame.setJMenuBar(demo.createMenuBar());
-        frame.setContentPane(demo.getContentPane());
+        frame.setContentPane(demo.getRootPane());
         //QLHSPanel(frame.getContentPane());
         //Display the window.
         //frame.setSize(450, 260);

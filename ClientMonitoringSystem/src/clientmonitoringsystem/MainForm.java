@@ -11,6 +11,16 @@ import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import javax.swing.RowFilter;
+import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 import javax.swing.tree.*;
 
 /**
@@ -39,12 +49,15 @@ public class MainForm extends javax.swing.JFrame {
         jPanel4 = new javax.swing.JPanel();
         jPanel6 = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
-        btnStart = new javax.swing.JButton();
         lblInfor = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
+        btnStart = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jTree1 = new javax.swing.JTree();
+        txtSearch = new javax.swing.JTextField();
+        jButton1 = new javax.swing.JButton();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        tableMonitor = new javax.swing.JTable();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        tableLstClient = new javax.swing.JTable();
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -72,6 +85,11 @@ public class MainForm extends javax.swing.JFrame {
 
         jPanel2.setPreferredSize(new java.awt.Dimension(432, 50));
 
+        lblInfor.setText("IP & Port");
+        lblInfor.setMaximumSize(new java.awt.Dimension(100, 16));
+        lblInfor.setPreferredSize(new java.awt.Dimension(300, 20));
+        jPanel2.add(lblInfor);
+
         btnStart.setText("Start");
         btnStart.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -80,37 +98,76 @@ public class MainForm extends javax.swing.JFrame {
         });
         jPanel2.add(btnStart);
 
-        lblInfor.setText("IP & Port");
-        lblInfor.setMaximumSize(new java.awt.Dimension(100, 16));
-        lblInfor.setPreferredSize(new java.awt.Dimension(300, 20));
-        jPanel2.add(lblInfor);
-
-        jButton1.setText("ShowTree");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
-        jPanel2.add(jButton1);
-
         getContentPane().add(jPanel2, java.awt.BorderLayout.PAGE_START);
 
-        jScrollPane1.setViewportView(jTree1);
+        txtSearch.setText("jTextField1");
+
+        jButton1.setText("jButton1");
+
+        tableMonitor.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null}
+            },
+            new String [] {
+                "STT", "Thời điểm", "Action", "IP Client", "Diễn giải"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Long.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        jScrollPane2.setViewportView(tableMonitor);
+
+        tableLstClient.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "STT", "IP"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Long.class, java.lang.String.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        jScrollPane3.setViewportView(tableLstClient);
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 432, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 81, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 319, Short.MAX_VALUE))
+                .addContainerGap()
+                .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(jButton1)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 256, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(19, 19, 19))
+                .addContainerGap()
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButton1))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(29, 29, 29)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 579, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         getContentPane().add(jPanel3, java.awt.BorderLayout.CENTER);
@@ -130,34 +187,12 @@ public class MainForm extends javax.swing.JFrame {
             lblInfor.setText("Waiting for client connections on: " + serverSocket.getInetAddress().getLocalHost().getHostAddress() + ":" + SERVER_PORT);
             RunThread rt = new RunThread();
             rt.start();
+            TableFilter tb = new TableFilter();
+            tb.start();
         } catch (IOException ex) {
             Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
     }//GEN-LAST:event_btnStartActionPerformed
-
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
-//        File fileRoot = new File("C:\\");
-//
-//        DefaultMutableTreeNode root = new DefaultMutableTreeNode(fileRoot);
-//        DefaultTreeModel model = new DefaultTreeModel(root);
-//
-//        File[] subItems = fileRoot.listFiles();
-//        for (File file : subItems) {
-//            root.add(new DefaultMutableTreeNode(file));
-//        }
-//
-//        jTree1.setModel(model);
-
-        JFileChooser fc = new JFileChooser();
-        fc.setCurrentDirectory(new java.io.File("\\192.168.196.128")); // start at application current directory
-        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        int returnVal = fc.showSaveDialog(this);
-        if(returnVal == JFileChooser.APPROVE_OPTION) {
-            File yourFolder = fc.getSelectedFile();
-        }
-    }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -191,13 +226,14 @@ public class MainForm extends javax.swing.JFrame {
             public void run() {
                 new MainForm().setVisible(true);
             }
-            
         });
     }
 
     class RunThread extends Thread {
-        public RunThread()
+        //private JTable _table;
+        public RunThread() //JTable table
         {
+            //this._table = table;
         }
 
         public void run()
@@ -208,7 +244,6 @@ public class MainForm extends javax.swing.JFrame {
                     
                     Socket socket = serverSocket.accept();
                     System.out.println("Client accepted: " + socket);
- 
                     WorkWithClient th  = new WorkWithClient(socket);
                     th.start();
                     
@@ -225,6 +260,7 @@ public class MainForm extends javax.swing.JFrame {
     class WorkWithClient extends Thread
     {
         private Socket socket;
+        //private JTable _table;
         public WorkWithClient(Socket socket) {
             this.socket = socket;
         }
@@ -232,20 +268,100 @@ public class MainForm extends javax.swing.JFrame {
         public void run() {
             System.out.println("Processing: " + socket);
             try {
-                OutputStream os = socket.getOutputStream();
-                InputStream is = socket.getInputStream();
-                while (true) {
-                    int ch = is.read(); // Receive data from client
-                    if (ch == -1) {
-                        break;
-                    }
-                    os.write(ch); // Send the results to client
-                    System.out.println("data: " + ch);
+                InputStreamReader inputstreamreader = new    
+                InputStreamReader(socket.getInputStream());
+
+                BufferedReader bufferedreader = new  
+                BufferedReader(inputstreamreader);
+
+                PrintWriter printwriter = new  
+                PrintWriter(socket.getOutputStream(),true);
+
+                String line = "";
+                boolean done = false;
+                while (((line = bufferedreader.readLine()) != null) &&(!done)){
+                    DefaultTableModel model = (DefaultTableModel) tableLstClient.getModel();
+                    TableListClient Clientth = new TableListClient(model);
+                    int rowCount = model.getRowCount();
+                    model.addRow(new Object[]{rowCount + 1, (socket.getInetAddress().getLocalHost().getHostAddress().toString() + ":"+ String.valueOf(socket.getPort())) });
+                    Clientth.start();
+                    if (line.compareToIgnoreCase("Exit") == 0) done = true;
                 }
             } catch (IOException e) {
                 System.err.println("Request Processing Error: " + e);
             }
             System.out.println("Complete processing: " + socket);   
+        }
+    }
+    
+    class TableListClient extends Thread{
+        private final DefaultTableModel _model;
+        public TableListClient(DefaultTableModel model)
+        {
+            this._model = model;
+        }
+        @Override
+        public void run()
+        {
+            try {
+                SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                    public void run() {
+                        _model.fireTableDataChanged();
+                    }
+                });
+                Thread.sleep(1000);
+            } catch (Exception e) {
+            }
+   
+        }
+    }
+    
+    class TableFilter extends Thread{
+        public TableFilter()
+        {
+        }
+        @Override
+        public void run()
+        {
+            try {
+                TableRowSorter<TableModel> sort = new TableRowSorter<>(tableLstClient.getModel());
+                tableLstClient.setRowSorter(sort);
+                SwingUtilities.invokeLater(new Runnable(){
+                    @Override
+                    public void run() {
+                        txtSearch.getDocument().addDocumentListener(new DocumentListener() {
+                        @Override
+                            public void insertUpdate(DocumentEvent e) {
+                                String str = txtSearch.getText();
+                                if (str.trim().length() == 0) {
+                                    sort.setRowFilter(null);
+                                } else {
+                                    sort.setRowFilter(RowFilter.regexFilter("(?i)" + str));
+                                }
+                            }
+
+                            @Override
+                            public void removeUpdate(DocumentEvent e) {
+                                String str = txtSearch.getText();
+                                if (str.trim().length() == 0) {
+                                    sort.setRowFilter(null);
+                                } else {
+                                    sort.setRowFilter(RowFilter.regexFilter("(?i)" + str));
+                                }
+                            }
+
+                            @Override
+                            public void changedUpdate(DocumentEvent e) {
+                                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+                            }
+                        });
+                    }
+                });
+                
+                
+            } catch (Exception e) {
+            }
         }
     }
     
@@ -256,9 +372,12 @@ public class MainForm extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel6;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTree jTree1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JLabel lblInfor;
+    private javax.swing.JTable tableLstClient;
+    private javax.swing.JTable tableMonitor;
+    private javax.swing.JTextField txtSearch;
     // End of variables declaration//GEN-END:variables
 
 }
