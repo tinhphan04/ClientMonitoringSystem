@@ -333,6 +333,7 @@ public class ClientGUI extends javax.swing.JFrame {
         }
     }
     
+    //Ghi log trên client
     private static void writeLog(String info) {
         String filename = "LogClient.txt";
         BufferedWriter bw = null;
