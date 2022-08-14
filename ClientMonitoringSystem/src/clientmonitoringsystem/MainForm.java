@@ -455,6 +455,7 @@ public class MainForm extends javax.swing.JFrame {
         }
     }
     
+    //Ghi log Server
     private static void writeLog(String info) {
         String filename = "LogServer.txt";
         BufferedWriter bw = null;
