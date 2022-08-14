@@ -407,6 +407,7 @@ public class MainForm extends javax.swing.JFrame {
         }
     }
     
+    //Filter log trên server
     class FilterLog extends Thread{
         public FilterLog()
         {
