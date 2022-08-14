@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -27,11 +28,19 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
+import javax.swing.RowFilter;
+import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 
 /**
  *
@@ -62,6 +71,10 @@ public class ClientGUI extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         txtIP = new javax.swing.JTextField();
         btnConnect = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        tableLog = new javax.swing.JTable();
+        jLabel2 = new javax.swing.JLabel();
+        txtSearch = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -103,25 +116,127 @@ public class ClientGUI extends javax.swing.JFrame {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
+        tableLog.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "STT", "Thời gian", "Action", "Diễn giải"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Long.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        jScrollPane1.setViewportView(tableLog);
+
+        jLabel2.setText("Filter:");
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addGap(0, 3, Short.MAX_VALUE))
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel2)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 137, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 262, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 247, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         getContentPane().add(jPanel2, java.awt.BorderLayout.CENTER);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+    class FilterLog extends Thread{
+        public FilterLog()
+        {
+        }
+        @Override
+        public void run()
+        {
+            try {
+                TableRowSorter<TableModel> sort = new TableRowSorter<>(tableLog.getModel());
+                tableLog.setRowSorter(sort);
+                SwingUtilities.invokeLater(new Runnable(){
+                    @Override
+                    public void run() {
+                        txtSearch.getDocument().addDocumentListener(new DocumentListener() {
+                        @Override
+                            public void insertUpdate(DocumentEvent e) {
+                                String str = txtSearch.getText();
+                                if (str.trim().length() == 0) {
+                                    sort.setRowFilter(null);
+                                } else {
+                                    sort.setRowFilter(RowFilter.regexFilter("(?i)" + str));
+                                }
+                            }
+
+                            @Override
+                            public void removeUpdate(DocumentEvent e) {
+                                String str = txtSearch.getText();
+                                if (str.trim().length() == 0) {
+                                    sort.setRowFilter(null);
+                                } else {
+                                    sort.setRowFilter(RowFilter.regexFilter("(?i)" + str));
+                                }
+                            }
+
+                            @Override
+                            public void changedUpdate(DocumentEvent e) {
+                                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+                            }
+                        });
+                    }
+                });
+                
+                
+            } catch (Exception e) {
+            }
+        }
+    }
+    
+    class TableRefresh extends Thread{
+        private final DefaultTableModel _model;
+        public TableRefresh(DefaultTableModel model)
+        {
+            this._model = model;
+        }
+        @Override
+        public void run()
+        {
+            try {
+                SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                    public void run() {
+                        _model.fireTableDataChanged();
+                    }
+                });
+                Thread.sleep(1000);
+            } catch (Exception e) {
+            }
+   
+        }
+    }
     
     class MonitorFolder extends Thread{
         private Socket socket;
@@ -136,7 +251,7 @@ public class ClientGUI extends javax.swing.JFrame {
         @Override
         public void run()
         {
-            
+            DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
             FileSystem fs = FileSystems.getDefault();
             WatchService ws;
             try {
@@ -152,10 +267,16 @@ public class ClientGUI extends javax.swing.JFrame {
                     {
                         Object c = e.context();
                         System.out.printf("%s %d %s\n", e.kind(), e.count(), c);
-                        
-                        me.setTime(new Date().toString());
+                          
+                        me.setTime(dateFormat.format(new Date()));
                         me.setAction(e.kind().name());
                         me.setDescription(c.toString());
+                        DefaultTableModel model = (DefaultTableModel) tableLog.getModel();
+                        TableRefresh Clientth = new TableRefresh(model);
+                        int rowCount = model.getRowCount();
+                        model.addRow(new Object[]{rowCount + 1, me.getTime() , me.getAction(), me.getDescription() });
+                        Clientth.start();
+                        writeLog(socket.getInetAddress().getLocalHost().getHostAddress().toString()+ ":" + socket.getPort() + ": "+ me.getAction() +" "+ me.getTime()+ " " + me.getDescription());
                         oos.writeObject(me);
                         oos.flush();
                     }
@@ -188,6 +309,7 @@ public class ClientGUI extends javax.swing.JFrame {
             try {
                 while (!success) {
                     socket = new Socket(_IP, _Port); // Connect to server
+                    writeLog(socket.getInetAddress().getLocalHost().getHostAddress().toString()+ ":" + socket.getPort() + ": Connect to Server");
                     DataInputStream dis = new DataInputStream(socket.getInputStream());
                     ObjectOutputStream oos = new ObjectOutputStream (socket.getOutputStream());
 
@@ -211,6 +333,29 @@ public class ClientGUI extends javax.swing.JFrame {
         }
     }
     
+    private static void writeLog(String info) {
+        String filename = "LogClient.txt";
+        BufferedWriter bw = null;
+        FileWriter fw = null;
+        try {
+            fw = new FileWriter(filename, true);
+            bw = new BufferedWriter(fw);
+            bw.write(info);
+            bw.write("\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (bw != null)
+                    bw.close();
+                if (fw != null)
+                    fw.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+    
     private void btnConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConnectActionPerformed
         // TODO add your handling code here:
         String ip_addr = txtIP.getText().toString();
@@ -218,14 +363,8 @@ public class ClientGUI extends javax.swing.JFrame {
         {
             ConnectToServer st = new ConnectToServer(ip_addr, 7000);
             st.start();
-            //Thread.sleep(1000);
-//            if (socket != null) {
-//                try {
-//                    socket.close();
-//                } catch (IOException ex) {
-//                    Logger.getLogger(ClientGUI.class.getName()).log(Level.SEVERE, null, ex);
-//                }
-//            }
+            FilterLog fl = new FilterLog();
+            fl.start();
         }
         else{
             JOptionPane.showMessageDialog(this, "Vui long nhap IP",
@@ -233,6 +372,7 @@ public class ClientGUI extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnConnectActionPerformed
 
+    
     /**
      * @param args the command line arguments
      */
@@ -271,8 +411,12 @@ public class ClientGUI extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnConnect;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTable tableLog;
     private javax.swing.JTextField txtIP;
+    private javax.swing.JTextField txtSearch;
     // End of variables declaration//GEN-END:variables
 }
