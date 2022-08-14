@@ -6,6 +6,7 @@ package clientmonitoringsystem;
 
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.*;
@@ -50,11 +51,13 @@ public class MainForm extends javax.swing.JFrame {
         btnStart = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         txtSearch = new javax.swing.JTextField();
-        jButton1 = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         tableMonitor = new javax.swing.JTable();
         jScrollPane3 = new javax.swing.JScrollPane();
         tableLstClient = new javax.swing.JTable();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        txtSearchLog = new javax.swing.JTextField();
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -97,16 +100,11 @@ public class MainForm extends javax.swing.JFrame {
 
         getContentPane().add(jPanel2, java.awt.BorderLayout.PAGE_START);
 
-        txtSearch.setText("jTextField1");
-
-        jButton1.setText("jButton1");
+        jPanel3.setPreferredSize(new java.awt.Dimension(432, 500));
 
         tableMonitor.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+
             },
             new String [] {
                 "STT", "Thời điểm", "Action", "IP Client", "Diễn giải"
@@ -140,18 +138,28 @@ public class MainForm extends javax.swing.JFrame {
         });
         jScrollPane3.setViewportView(tableLstClient);
 
+        jLabel1.setText("Filter client:");
+
+        jLabel2.setText("Filter log:");
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 432, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 680, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jButton1)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtSearchLog, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -159,11 +167,15 @@ public class MainForm extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton1))
+                    .addComponent(jLabel1))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(29, 29, 29)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 579, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(txtSearchLog, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 237, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
@@ -173,6 +185,7 @@ public class MainForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
     public static final int NUM_OF_THREAD = 4;
     public final static int SERVER_PORT = 7000;
+    public final static String FilePath = "C:\\ClientMonitoringSystem\\Data";
     ExecutorService executor = Executors.newFixedThreadPool(NUM_OF_THREAD);
     ServerSocket serverSocket = null;
     Socket socket = null;
@@ -182,11 +195,14 @@ public class MainForm extends javax.swing.JFrame {
  
         try {
             serverSocket = new ServerSocket(SERVER_PORT);
+            writeLog("Server " +serverSocket.getInetAddress().getLocalHost().getHostAddress() + ":" + SERVER_PORT + " is started");
             lblInfor.setText("Waiting for client connections on: " + serverSocket.getInetAddress().getLocalHost().getHostAddress() + ":" + SERVER_PORT);
             AcceptConnect rt = new AcceptConnect(serverSocket);
             rt.start();
-            TableFilter tb = new TableFilter();
+            FilterClient tb = new FilterClient();
             tb.start();
+            FilterLog fl = new FilterLog();
+            fl.start();
         } catch (IOException ex) {
             Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -262,35 +278,67 @@ public class MainForm extends javax.swing.JFrame {
         @Override
         public void run() {
             try {
+                writeLog("Client: " + socket.getInetAddress().getLocalHost().getHostAddress().toString()+ ":" + socket.getPort() + " connect to Server");
                 //DataInputStream dis = new DataInputStream(socket.getInputStream());
-                ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                //ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                 DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-                //String response = ois.readUTF();
-                
-                //System.out.println(response);
+
                 DefaultTableModel model = (DefaultTableModel) tableLstClient.getModel();
-                TableListClient Clientth = new TableListClient(model);
+                TableRefresh Clientth = new TableRefresh(model);
                 int rowCount = model.getRowCount();
                 model.addRow(new Object[]{rowCount + 1, (socket.getInetAddress().getLocalHost().getHostAddress().toString() + ":"+ String.valueOf(socket.getPort())) });
                 Clientth.start();
-                //Gửi đường dẫn thư mục giám sát cho client
-                dos.writeUTF("C:\\ClientMonitoringSystem\\Data");
+                //Gửi thông báo đường dẫn thư mục giám sát cho client
+                dos.writeUTF(FilePath);
+                writeLog("Monitor folder: " + FilePath);
                 dos.flush();
-                
-                Message m = (Message) ois.readObject();
-                System.out.println("server: " + m.getTime() + " " + m.getAction() + " " +m.getDescription());
-
+                ReceiveMessage rc = new ReceiveMessage(socket);
+                rc.start();
             } catch (IOException e) {
-                
-            } catch (ClassNotFoundException ex) {
-                Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
+
             }  
         }
     }
     
-    class TableListClient extends Thread{
+    class ReceiveMessage extends Thread{
+        private Socket socket;
+        private ObjectInputStream ois;
+        public ReceiveMessage(Socket socket) throws IOException
+        {
+            this.socket = socket;
+            this.ois = new ObjectInputStream(socket.getInputStream());
+        }
+        @Override
+        public void run()
+        {
+            while(true)
+            {
+                try {
+                    Message m = (Message) ois.readObject();//tableMonitor
+                    if(m != null)
+                    {
+                        DefaultTableModel model = (DefaultTableModel) tableMonitor.getModel();
+                        TableRefresh Clientth = new TableRefresh(model);
+                        int rowCount = model.getRowCount();
+                        model.addRow(new Object[]{rowCount + 1, m.getTime() , m.getAction(), (socket.getInetAddress().getLocalHost().getHostAddress().toString() + ":"+ String.valueOf(socket.getPort())), m.getDescription() });
+                        Clientth.start();
+                        writeLog(socket.getInetAddress().getLocalHost().getHostAddress().toString()+ ":" + socket.getPort() + ": Change " +m.getAction()+ " " + m.getTime() + " " + m.getDescription());
+                        
+                    }
+                    
+                    
+                } catch (IOException ex) {
+                    Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (ClassNotFoundException ex) {
+                    Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+    }
+    
+    class TableRefresh extends Thread{
         private final DefaultTableModel _model;
-        public TableListClient(DefaultTableModel model)
+        public TableRefresh(DefaultTableModel model)
         {
             this._model = model;
         }
@@ -311,8 +359,8 @@ public class MainForm extends javax.swing.JFrame {
         }
     }
     
-    class TableFilter extends Thread{
-        public TableFilter()
+    class FilterClient extends Thread{
+        public FilterClient()
         {
         }
         @Override
@@ -359,10 +407,80 @@ public class MainForm extends javax.swing.JFrame {
         }
     }
     
+    class FilterLog extends Thread{
+        public FilterLog()
+        {
+        }
+        @Override
+        public void run()
+        {
+            try {
+                TableRowSorter<TableModel> sort = new TableRowSorter<>(tableMonitor.getModel());
+                tableMonitor.setRowSorter(sort);
+                SwingUtilities.invokeLater(new Runnable(){
+                    @Override
+                    public void run() {
+                        txtSearchLog.getDocument().addDocumentListener(new DocumentListener() {
+                        @Override
+                            public void insertUpdate(DocumentEvent e) {
+                                String str = txtSearchLog.getText();
+                                if (str.trim().length() == 0) {
+                                    sort.setRowFilter(null);
+                                } else {
+                                    sort.setRowFilter(RowFilter.regexFilter("(?i)" + str));
+                                }
+                            }
+
+                            @Override
+                            public void removeUpdate(DocumentEvent e) {
+                                String str = txtSearchLog.getText();
+                                if (str.trim().length() == 0) {
+                                    sort.setRowFilter(null);
+                                } else {
+                                    sort.setRowFilter(RowFilter.regexFilter("(?i)" + str));
+                                }
+                            }
+
+                            @Override
+                            public void changedUpdate(DocumentEvent e) {
+                                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+                            }
+                        });
+                    }
+                });
+                
+                
+            } catch (Exception e) {
+            }
+        }
+    }
     
+    private static void writeLog(String info) {
+        String filename = "LogServer.txt";
+        BufferedWriter bw = null;
+        FileWriter fw = null;
+        try {
+            fw = new FileWriter(filename, true);
+            bw = new BufferedWriter(fw);
+            bw.write(info);
+            bw.write("\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (bw != null)
+                    bw.close();
+                if (fw != null)
+                    fw.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnStart;
-    private javax.swing.JButton jButton1;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
@@ -373,6 +491,7 @@ public class MainForm extends javax.swing.JFrame {
     private javax.swing.JTable tableLstClient;
     private javax.swing.JTable tableMonitor;
     private javax.swing.JTextField txtSearch;
+    private javax.swing.JTextField txtSearchLog;
     // End of variables declaration//GEN-END:variables
 
 }
